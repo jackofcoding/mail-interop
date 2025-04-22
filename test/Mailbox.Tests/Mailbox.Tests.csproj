@@ -6,9 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>MailInterop.Mailbox.Tests</RootNamespace>
+    <UserSecretsId>7e84cf0e-518a-44fb-9366-56567cb925d0</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.4" />
     <PackageReference Include="TUnit" Version="0.19.86" />
   </ItemGroup>
 
