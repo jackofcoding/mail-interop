@@ -1,4 +1,5 @@
 ﻿using MailKit.Net.Imap;
+using MailKit.Security;
 
 namespace MailInterop.Mailbox;
 
@@ -7,7 +8,7 @@ public sealed class MailboxConnection : IAsyncDisposable, IDisposable
   private readonly MailboxConfiguration _configuration;
   private readonly ImapClient _client;
 
-  public bool IsOnline => _client.IsConnected;
+  public bool IsOnline => _client.IsAuthenticated;
 
   public MailboxConnection(MailboxConfiguration configuration)
   {
@@ -18,7 +19,10 @@ public sealed class MailboxConnection : IAsyncDisposable, IDisposable
   public async Task ConnectAsync(CancellationToken cancellationToken)
   {
     if (!_client.IsConnected)
-      await _client.ConnectAsync(_configuration.Host, _configuration.Port, _configuration.UseSSL, cancellationToken);
+      await _client.ConnectAsync(_configuration.Host, 993, SecureSocketOptions.SslOnConnect, cancellationToken).ConfigureAwait(false);
+
+    if (!_client.IsAuthenticated)
+      await _client.AuthenticateAsync(_configuration.Username, _configuration.Password, cancellationToken).ConfigureAwait(false);
   }
 
   #region Disposing
@@ -31,14 +35,9 @@ public sealed class MailboxConnection : IAsyncDisposable, IDisposable
     _client.Dispose();
 
     Dispose(false);
-    GC.SuppressFinalize(this);
   }
 
-  public void Dispose()
-  {
-    Dispose(true);
-    GC.SuppressFinalize(this);
-  }
+  public void Dispose() => Dispose(true);
 
   private void Dispose(bool disposing)
   {
