@@ -32,4 +32,34 @@ public class ConnectAsync
 
     await Assert.That(mailboxConnection.IsOnline).IsTrue();
   }
+  
+  [Test]
+  public async Task InvalidHost_FailsToConnectToServer()
+  {
+    var configuration = new MailboxConfiguration("wrong_host", _username, _password);
+    await using var mailboxConnection = new Mailbox.MailboxConnection(configuration);
+
+    var exception = await Assert.ThrowsAsync<MailboxConnectionException>(async () => await mailboxConnection.ConnectAsync(CancellationToken.None).ConfigureAwait(false));
+    await Assert.That(exception.Host).IsEqualTo(configuration.Host);
+  }
+  
+  [Test]
+  public async Task InvalidUsername_FailsToConnectToServer()
+  {
+    var configuration = new MailboxConfiguration(_host, "wrong_username", _password);
+    await using var mailboxConnection = new Mailbox.MailboxConnection(configuration);
+
+    var exception = await Assert.ThrowsAsync<MailboxAuthenticationException>(async () => await mailboxConnection.ConnectAsync(CancellationToken.None).ConfigureAwait(false));
+    await Assert.That(exception.Username).IsEqualTo(configuration.Username);
+  }
+  
+  [Test]
+  public async Task InvalidPassword_FailsToConnectToServer()
+  {
+    var configuration = new MailboxConfiguration(_host, _username, "wrong_password");
+    await using var mailboxConnection = new Mailbox.MailboxConnection(configuration);
+
+    var exception = await Assert.ThrowsAsync<MailboxAuthenticationException>(async () => await mailboxConnection.ConnectAsync(CancellationToken.None).ConfigureAwait(false));
+    await Assert.That(exception.Username).IsEqualTo(configuration.Username);
+  }
 }

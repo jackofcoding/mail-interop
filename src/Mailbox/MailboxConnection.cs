@@ -1,4 +1,5 @@
-﻿using MailKit.Net.Imap;
+﻿using System.Net.Sockets;
+using MailKit.Net.Imap;
 using MailKit.Security;
 
 namespace MailInterop.Mailbox;
@@ -18,11 +19,26 @@ public sealed class MailboxConnection : IAsyncDisposable, IDisposable
 
   public async Task ConnectAsync(CancellationToken cancellationToken)
   {
-    if (!_client.IsConnected)
-      await _client.ConnectAsync(_configuration.Host, 993, SecureSocketOptions.SslOnConnect, cancellationToken).ConfigureAwait(false);
+    try
+    {
+      if (!_client.IsConnected)
+        await _client.ConnectAsync(_configuration.Host, 993, SecureSocketOptions.SslOnConnect, cancellationToken).ConfigureAwait(false);
+    }
+    catch (Exception exception)
+    {
+      if (exception is not SocketException { SocketErrorCode: SocketError.Success })
+        throw new MailboxConnectionException(_configuration.Host, exception);
+    }
 
-    if (!_client.IsAuthenticated)
-      await _client.AuthenticateAsync(_configuration.Username, _configuration.Password, cancellationToken).ConfigureAwait(false);
+    try
+    {
+      if (!_client.IsAuthenticated)
+        await _client.AuthenticateAsync(_configuration.Username, _configuration.Password, cancellationToken).ConfigureAwait(false);
+    }
+    catch (Exception exception)
+    {
+      throw new MailboxAuthenticationException(_configuration.Username, exception);
+    }
   }
 
   #region Disposing
