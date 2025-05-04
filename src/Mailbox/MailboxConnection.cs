@@ -1,4 +1,5 @@
 ﻿using System.Net.Sockets;
+using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Security;
 
@@ -39,6 +40,30 @@ public sealed class MailboxConnection : IAsyncDisposable, IDisposable
     {
       throw new MailboxAuthenticationException(_configuration.Username, exception);
     }
+  }
+
+  public async Task<MailboxFolder> GetMailboxFolder(string path, CancellationToken cancellationToken)
+  {
+    if (!IsOnline)
+      throw new MailboxConnectionNotOnlineException();
+
+    IMailFolder folder;
+    try
+    {
+      folder = await _client.GetFolderAsync(path, cancellationToken).ConfigureAwait(false);
+    }
+    catch (FolderNotFoundException exception)
+    {
+      throw new MailboxFolderNotfoundException(path, exception);
+    }
+
+    var pathSpan = path.AsSpan();
+    var lastDirectorySeparatorIndex = pathSpan.LastIndexOf(folder.DirectorySeparator);
+    var name = lastDirectorySeparatorIndex == -1
+      ? path
+      : new String(pathSpan[lastDirectorySeparatorIndex..]);
+
+    return new MailboxFolder(name, path, _client, folder);
   }
 
   #region Disposing
