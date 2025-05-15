@@ -2,7 +2,7 @@
 
 namespace MailInterop.Mailbox.Tests.MailboxConnection;
 
-public class GetFolder
+public class GetMailboxFolder
 {
   private static Mailbox.MailboxConnection _connection = null!;
   
@@ -40,11 +40,21 @@ public class GetFolder
   }
 
   [Test]
-  public async Task InvalidPath_ReturnsMailboxFolder(CancellationToken cancellationToken)
+  public async Task InvalidPath_ThrowsError(CancellationToken cancellationToken)
   {
     var path = "DoesNotExist";
     
     var exception = await Assert.ThrowsAsync<MailboxFolderNotfoundException>(async () => await _connection.GetMailboxFolder(path, cancellationToken).ConfigureAwait(false));
     await Assert.That(exception.Path).IsEqualTo(path);
+  }
+
+  [Test]
+  public async Task InvalidPathParts_ThrowsError(CancellationToken cancellationToken)
+  {
+    var pathParts = new[] { "DoesNotExist", "AlsoDoesNotExist" };
+    var expectedPath = "DoesNotExist.AlsoDoesNotExist";
+    
+    var exception = await Assert.ThrowsAsync<MailboxFolderNotfoundException>(async () => await _connection.GetMailboxFolder(pathParts, cancellationToken).ConfigureAwait(false));
+    await Assert.That(exception.Path).IsEqualTo(expectedPath);
   }
 }

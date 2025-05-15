@@ -42,6 +42,15 @@ public sealed class MailboxConnection : IAsyncDisposable, IDisposable
     }
   }
 
+  public async Task<MailboxFolder> GetMailboxFolder(string[] pathParts, CancellationToken cancellationToken)
+  {
+    if (!IsOnline)
+      throw new MailboxConnectionNotOnlineException();
+    
+    var path = String.Join(_client.Inbox.DirectorySeparator, pathParts);
+    return await GetMailboxFolder(path, cancellationToken).ConfigureAwait(false);
+  }
+
   public async Task<MailboxFolder> GetMailboxFolder(string path, CancellationToken cancellationToken)
   {
     if (!IsOnline)
