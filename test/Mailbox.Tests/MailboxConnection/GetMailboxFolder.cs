@@ -49,10 +49,29 @@ public class GetMailboxFolder
   }
 
   [Test]
+  public async Task ValidPathParts_ReturnsMailboxFolder(CancellationToken cancellationToken)
+  {
+    var pathParts = new[] { "INBOX", "UnitTestMails" };
+    var folder = await _connection.GetMailboxFolder(pathParts, cancellationToken).ConfigureAwait(false);
+    
+    await Assert.That(folder).IsNotNull();
+  }
+
+  [Test]
   public async Task InvalidPathParts_ThrowsError(CancellationToken cancellationToken)
   {
     var pathParts = new[] { "DoesNotExist", "AlsoDoesNotExist" };
     var expectedPath = "DoesNotExist.AlsoDoesNotExist";
+    
+    var exception = await Assert.ThrowsAsync<MailboxFolderNotfoundException>(async () => await _connection.GetMailboxFolder(pathParts, cancellationToken).ConfigureAwait(false));
+    await Assert.That(exception.Path).IsEqualTo(expectedPath);
+  }
+
+  [Test]
+  public async Task PartialInvalidPathParts_ThrowsError(CancellationToken cancellationToken)
+  {
+    var pathParts = new[] { "UnitTestMails", "DoesNotExist" };
+    var expectedPath = "UnitTestMails.DoesNotExist";
     
     var exception = await Assert.ThrowsAsync<MailboxFolderNotfoundException>(async () => await _connection.GetMailboxFolder(pathParts, cancellationToken).ConfigureAwait(false));
     await Assert.That(exception.Path).IsEqualTo(expectedPath);

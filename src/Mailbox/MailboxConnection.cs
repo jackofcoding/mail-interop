@@ -70,7 +70,7 @@ public sealed class MailboxConnection : IAsyncDisposable, IDisposable
     var lastDirectorySeparatorIndex = pathSpan.LastIndexOf(folder.DirectorySeparator);
     var name = lastDirectorySeparatorIndex == -1
       ? path
-      : new String(pathSpan[lastDirectorySeparatorIndex..]);
+      : new String(pathSpan[(lastDirectorySeparatorIndex + 1)..]);
 
     return new MailboxFolder(name, path, _client, folder);
   }

@@ -20,6 +20,32 @@ public sealed class MailboxFolder : IAsyncDisposable, IDisposable
   
   public static async Task<MailboxFolder> Create(string path, MailboxConnection connection, CancellationToken cancellationToken) => await connection.GetMailboxFolder(path, cancellationToken).ConfigureAwait(false);
 
+  public async Task Open(bool write, CancellationToken cancellationToken)
+  {
+    var desiredAccess = write ? FolderAccess.ReadWrite : FolderAccess.ReadOnly;
+    switch (_folder.IsOpen)
+    {
+      case false:
+        await _folder.OpenAsync(desiredAccess, cancellationToken).ConfigureAwait(false);
+        break;
+      
+      case true when _folder.Access != desiredAccess:
+        throw new NotImplementedException("Switching between read and write access is not implemented.");
+    }
+  }
+  
+  public async Task<IEnumerable<MailMetadata>> FetchAllMetadata(CancellationToken cancellationToken)
+  {
+    if (!_folder.IsOpen)
+      throw new MailboxFolderNotOpenedException(_name);
+    
+    const MessageSummaryItems flags = MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.Flags;
+    IList<IMessageSummary>? summaries = await _folder.FetchAsync(0, -1, flags, cancellationToken: cancellationToken).ConfigureAwait(false);
+    
+    return summaries
+      .Where(x => (x.Flags & MessageFlags.Deleted) == 0)
+      .Select(x => new MailMetadata(x));
+  }
   
   #region Disposing
 

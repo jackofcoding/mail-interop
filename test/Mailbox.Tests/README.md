@@ -8,3 +8,8 @@ You must set these up before you can run the tests.
 You can set user secrets by navigating to this project, and then run  
 `dotnet user-secrets set <name> <value>`  
 Where you replace `<name>` and `<value>` without the `<>` included.
+
+This test project expects that the IMAP server is running and accessible.\
+The folder separator is expected to be `.`\
+It is expected that the e-mails in directory `_UnitTestMails` are in the folder `INDEX.UnitTestMails`.\
+**TODO: NOT IMPLEMENTED YET** (for now any three e-mails works)
